@@ -1,0 +1,22 @@
+go_import_path: github.com/cafebazaar/healthz
+
+language: go
+go:
+  - 1.8
+  - 1.7
+  - tip
+
+os:
+  - linux
+  - osx
+
+matrix:
+  allow_failures:
+    - go: tip
+  fast_finish: true
+
+script:
+  - go install ./...
+  - go test -timeout=30s -v ./...
+
+sudo: false
