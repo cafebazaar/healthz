@@ -21,7 +21,7 @@ func ExampleNewHandler() {
 	}
 	go func() {
 		err := healthzServer.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil {
 			log.Fatalln("Error while healthzServer.ListenAndServe():", err)
 		}
 	}()
