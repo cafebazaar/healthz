@@ -77,10 +77,11 @@ func (h *handler) OverallHealth() Health {
 
 // NewHandler creates a Handler and returns it. if details is true, these
 // values are also included in the applicable reports:
-// * Uptime: since call of this function
-// * Service Signature: which is passed to this function
-// * Hostname: which is extracted using `os.Hostname()`
-// * Health level and Severity level for all the registered components
+//
+//	* Uptime: since call of this function
+//	* Service Signature: which is passed to this function
+//	* Hostname: which is extracted using `os.Hostname()`
+//	* Health level and Severity level for all the registered components
 func NewHandler(serviceSignature string, details bool) Handler {
 	mux := http.NewServeMux()
 	hostname, _ := os.Hostname()

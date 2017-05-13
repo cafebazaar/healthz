@@ -72,7 +72,7 @@ type Handler interface {
 	SetHealth(component string, health Health)
 
 	// OverallHealth of a system is minimum value of these two:
-	// * Minimum health level of all the components with severity=Major
-	// * 1 + Minimum health level of all the components with severity=Unspecified
+	//	* Minimum health level of all the components with severity=Major
+	//	* 1 + Minimum health level of all the components with severity=Unspecified
 	OverallHealth() Health
 }
