@@ -27,7 +27,7 @@ func main() {
 	}
 	log.Printf("http://%s/\n", addr)
 	err := healthzServer.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil {
 		log.Fatalln("Error while healthzServer.ListenAndServe():", err)
 	}
 }
