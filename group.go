@@ -67,13 +67,24 @@ func (c *componentGroup) OverallHealth() Health {
 	if len(c.Subcomponents) == 0 {
 		return Unknown
 	}
-	res := Redundant
+	var res Health = 100
 	for _, c := range c.Subcomponents {
-		componentHealth := c.OverallHealth()
-		if c.Severity >= Major && componentHealth < res {
-			res = componentHealth
-		} else if c.Severity == Unspecified && (componentHealth+1) < res {
-			res = componentHealth + 1
+		if c.Severity >= Major {
+			componentHealth := c.OverallHealth()
+			if res > componentHealth {
+				res = componentHealth
+			}
+		}
+	}
+	if res == 100 {
+		res = Unknown
+	}
+	for _, c := range c.Subcomponents {
+		if c.Severity == Unspecified {
+			componentHealth := c.OverallHealth()
+			if res > (componentHealth + 1) {
+				res = componentHealth + 1
+			}
 		}
 	}
 	return res
@@ -90,17 +101,24 @@ func (c *componentGroup) reportComponents() *reportComponents {
 		rc.OverallHealth = c.Health
 		return rc
 	}
-	rc.OverallHealth = Redundant
 	for name, c := range c.Subcomponents {
 		subcomponentRC := c.reportComponents()
 		subcomponentRC.Name = name
 		rc.Subcomponents = append(rc.Subcomponents, subcomponentRC)
-
-		componentHealth := subcomponentRC.OverallHealth
-		if c.Severity >= Major && componentHealth < rc.OverallHealth {
-			rc.OverallHealth = componentHealth
-		} else if c.Severity == Unspecified && (componentHealth+1) < rc.OverallHealth {
-			rc.OverallHealth = componentHealth + 1
+	}
+	// TODO: how can we refactor this algorithm which also appears in OverallHealth()?
+	rc.OverallHealth = 100
+	for _, c := range rc.Subcomponents {
+		if c.Severity >= Major && rc.OverallHealth > c.OverallHealth {
+			rc.OverallHealth = c.OverallHealth
+		}
+	}
+	if rc.OverallHealth == 100 {
+		rc.OverallHealth = Unknown
+	}
+	for _, c := range rc.Subcomponents {
+		if c.Severity == Unspecified && rc.OverallHealth > (c.OverallHealth+1) {
+			rc.OverallHealth = c.OverallHealth + 1
 		}
 	}
 	sort.Sort(rc)

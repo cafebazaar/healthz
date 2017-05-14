@@ -1,6 +1,9 @@
 package healthz
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestComponentGroupSetGroupHealth(t *testing.T) {
 	c := newComponentGroup(Major, Unknown)
@@ -37,61 +40,80 @@ func TestRegister(t *testing.T) {
 	}
 }
 
+type hs struct {
+	h Health
+	s Severity
+}
+
 var overallHealthTestCases = []struct {
-	in  [3]Health
+	in  []hs
 	out Health
 }{
 	{
-		in:  [3]Health{Unknown, Unknown, Unknown},
+		in:  []hs{{Unknown, Major}, {Unknown, Unspecified}, {Unknown, Minor}},
 		out: Unknown,
 	},
 	{
-		in:  [3]Health{Unknown, Unknown, Redundant},
+		in:  []hs{{Unknown, Major}, {Unknown, Unspecified}, {Redundant, Minor}},
 		out: Unknown,
 	},
 	{
-		in:  [3]Health{Unknown, Redundant, Unknown},
+		in:  []hs{{Unknown, Major}, {Redundant, Unspecified}, {Unknown, Minor}},
 		out: Unknown,
 	},
 	{
-		in:  [3]Health{Redundant, Unknown, Unknown},
+		in:  []hs{{Redundant, Major}, {Unknown, Unspecified}, {Unknown, Minor}},
 		out: Normal,
 	},
 	{
-		in:  [3]Health{Redundant, Redundant, Unknown},
+		in:  []hs{{Redundant, Major}, {Redundant, Unspecified}, {Unknown, Minor}},
 		out: Redundant,
 	},
 	{
-		in:  [3]Health{Redundant, Normal, Unknown},
+		in:  []hs{{Redundant, Major}, {Normal, Unspecified}, {Unknown, Minor}},
 		out: Redundant,
 	},
 	{
-		in:  [3]Health{Redundant, Redundant, Warning},
+		in:  []hs{{Redundant, Major}, {Redundant, Unspecified}, {Warning, Minor}},
 		out: Redundant,
 	},
 	{
-		in:  [3]Health{Redundant, Error, Redundant},
+		in:  []hs{{Redundant, Major}, {Error, Unspecified}, {Redundant, Minor}},
 		out: Warning,
+	},
+	{
+		in:  []hs{{Unknown, Unspecified}},
+		out: Unknown,
+	},
+	{
+		in:  []hs{{Error, Minor}},
+		out: Unknown,
 	},
 }
 
 func TestOverallHealth(t *testing.T) {
-	c := newComponentGroup(Major, Unknown)
-	if o := c.OverallHealth(); o != Unknown {
-		t.Fatal("unexpected OverallHealth:", o)
-	}
+	{
+		c := newComponentGroup(Major, Unknown)
+		if o := c.OverallHealth(); o != Unknown {
+			t.Fatal("unexpected OverallHealth:", o)
+		}
 
-	cs0 := c.RegisterSubcomponent("major", Major)
-	cs1 := c.RegisterSubcomponent("unspecified", Unspecified)
-	cs2 := c.RegisterSubcomponent("minor", Minor)
-	if o := c.OverallHealth(); o != Unknown {
-		t.Fatal("unexpected OverallHealth:", o)
+		c.RegisterSubcomponent("major", Major)
+		c.RegisterSubcomponent("unspecified", Unspecified)
+		c.RegisterSubcomponent("minor", Minor)
+		if o := c.OverallHealth(); o != Unknown {
+			t.Fatal("unexpected OverallHealth:", o)
+		}
 	}
 
 	for i, tCase := range overallHealthTestCases {
-		cs0.SetGroupHealth(tCase.in[0])
-		cs1.SetGroupHealth(tCase.in[1])
-		cs2.SetGroupHealth(tCase.in[2])
+		c := newComponentGroup(Major, Unknown)
+		if o := c.OverallHealth(); o != Unknown {
+			t.Fatal("unexpected OverallHealth:", o)
+		}
+		for i, p := range tCase.in {
+			c.RegisterSubcomponent(fmt.Sprintf("c#%d", i), p.s).SetGroupHealth(p.h)
+		}
 		if o := c.OverallHealth(); o != tCase.out {
 			t.Fatalf("case #%d: unexpected OverallHealth: %v", i, o)
 		}
