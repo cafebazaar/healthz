@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"sort"
 	"time"
 )
 
@@ -29,55 +28,46 @@ func init() {
 	}
 }
 
-type reportComponents []*reportComponent
-type reportComponent struct {
-	Name     string
-	Severity Severity
-	Health   Health
+type reportComponents struct {
+	Name          string
+	Severity      Severity
+	OverallHealth Health
+	Subcomponents []*reportComponents `json:",omitempty"`
 }
 type report struct {
 	ServiceSignature string
-	OverallHealth    Health
-	Uptime           time.Duration    `json:",omitempty"`
-	Hostname         string           `json:",omitempty"`
-	Components       reportComponents `json:",omitempty"`
+	Uptime           time.Duration `json:",omitempty"`
+	Hostname         string        `json:",omitempty"`
+	Root             *reportComponents
 }
 
-func (a reportComponents) Len() int      { return len(a) }
-func (a reportComponents) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a reportComponents) Less(i, j int) bool {
-	if a[i].Health == a[j].Health {
-		return a[i].Severity > a[j].Severity
+func (rc *reportComponents) Len() int {
+	return len(rc.Subcomponents)
+}
+func (rc *reportComponents) Swap(i, j int) {
+	rc.Subcomponents[i], rc.Subcomponents[j] = rc.Subcomponents[j], rc.Subcomponents[i]
+}
+func (rc *reportComponents) Less(i, j int) bool {
+	if rc.Subcomponents[i].OverallHealth == rc.Subcomponents[j].OverallHealth {
+		return rc.Subcomponents[i].Severity > rc.Subcomponents[j].Severity
 	}
-	return a[i].Health < a[j].Health
+	return rc.Subcomponents[i].OverallHealth < rc.Subcomponents[j].OverallHealth
 }
 
-func (h *handler) report() *report {
+func (h *Handler) report() *report {
 	rpt := &report{
 		ServiceSignature: h.serviceSignature,
-		OverallHealth:    h.OverallHealth(),
 	}
 	if h.details {
 		uptime := time.Since(h.startTime)
 		rpt.Uptime = uptime
 		rpt.Hostname = h.hostname
-		h.mutex.RLock()
-		components := make([]*reportComponent, 0, len(h.components))
-		for name, c := range h.components {
-			components = append(components, &reportComponent{
-				Name:     name,
-				Health:   c.Health,
-				Severity: c.Severity,
-			})
-		}
-		h.mutex.RUnlock()
-		rpt.Components = reportComponents(components)
-		sort.Sort(rpt.Components)
+		rpt.Root = h.rootComponent.reportComponents()
 	}
 	return rpt
 }
 
-func (h *handler) reportLiveness(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) reportLiveness(w http.ResponseWriter, r *http.Request) {
 	overallHealth := h.OverallHealth()
 	if overallHealth >= Unknown {
 		w.Write([]byte("OK"))
@@ -86,7 +76,7 @@ func (h *handler) reportLiveness(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) reportReadiness(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) reportReadiness(w http.ResponseWriter, r *http.Request) {
 	overallHealth := h.OverallHealth()
 	if overallHealth >= Normal {
 		w.Write([]byte("OK"))
@@ -95,19 +85,19 @@ func (h *handler) reportReadiness(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) reportJSON(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) reportJSON(w http.ResponseWriter, r *http.Request) {
 	rpt := h.report()
 	jData, _ := json.Marshal(rpt)
-	w.Header().Set("Overall-Health", healthToTitle[rpt.OverallHealth])
-	w.Header().Set("Overall-Health-Code", fmt.Sprintf("%d", rpt.OverallHealth))
+	w.Header().Set("Overall-Health", healthToTitle[rpt.Root.OverallHealth])
+	w.Header().Set("Overall-Health-Code", fmt.Sprintf("%d", rpt.Root.OverallHealth))
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jData)
 }
 
-func (h *handler) reportHTML(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) reportHTML(w http.ResponseWriter, r *http.Request) {
 	rpt := h.report()
-	w.Header().Set("Overall-Health", healthToTitle[rpt.OverallHealth])
-	w.Header().Set("Overall-Health-Code", fmt.Sprintf("%d", rpt.OverallHealth))
+	w.Header().Set("Overall-Health", healthToTitle[rpt.Root.OverallHealth])
+	w.Header().Set("Overall-Health-Code", fmt.Sprintf("%d", rpt.Root.OverallHealth))
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	err := htmlTemplate.Execute(w, rpt)
 	if err != nil {

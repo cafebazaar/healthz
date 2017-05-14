@@ -2,31 +2,36 @@ package healthz
 
 import "testing"
 
-func TestSetHealth(t *testing.T) {
-	h := NewHandler("Test", true).(*handler)
-	h.SetHealth("test", Warning)
-	c, found := h.components["test"]
-	if !found {
-		t.Fatal("component test not found")
+func TestComponentGroupSetGroupHealth(t *testing.T) {
+	c := newComponentGroup(Major, Unknown)
+	if c.Health != Unknown {
+		t.Fatal("unexpected health:", c.Health)
 	}
+	if c.OverallHealth() != Unknown {
+		t.Fatal("unexpected OverallHealth():", c.Health)
+	}
+	c.SetGroupHealth(Warning)
 	if c.Health != Warning {
 		t.Fatal("unexpected health:", c.Health)
+	}
+	if c.OverallHealth() != Warning {
+		t.Fatal("unexpected OverallHealth():", c.Health)
 	}
 }
 
 func TestRegister(t *testing.T) {
-	h := NewHandler("Test", true).(*handler)
-	h.RegisterComponent("test", Major)
-	c, found := h.components["test"]
+	c := newComponentGroup(Minor, Unknown)
+	c.RegisterSubcomponent("test", Major)
+	sc, found := c.Subcomponents["test"]
 	if !found {
 		t.Fatal("component test not found")
 	}
-	if c.Severity != Major {
+	if sc.Severity != Major {
 		t.Fatal("unexpected severity:", c.Severity)
 	}
 
-	h.UnregisterComponent("test")
-	_, found = h.components["test"]
+	c.UnregisterSubcomponent("test")
+	_, found = c.Subcomponents["test"]
 	if found {
 		t.Fatal("unregistered component test was found")
 	}
@@ -71,25 +76,24 @@ var overallHealthTestCases = []struct {
 }
 
 func TestOverallHealth(t *testing.T) {
-	h := NewHandler("Test", true).(*handler)
-	if o := h.OverallHealth(); o != Unknown {
+	c := newComponentGroup(Major, Unknown)
+	if o := c.OverallHealth(); o != Unknown {
 		t.Fatal("unexpected OverallHealth:", o)
 	}
 
-	h.RegisterComponent("major", Major)
-	h.RegisterComponent("unspecified", Unspecified)
-	h.RegisterComponent("minor", Minor)
-	if o := h.OverallHealth(); o != Unknown {
+	cs0 := c.RegisterSubcomponent("major", Major)
+	cs1 := c.RegisterSubcomponent("unspecified", Unspecified)
+	cs2 := c.RegisterSubcomponent("minor", Minor)
+	if o := c.OverallHealth(); o != Unknown {
 		t.Fatal("unexpected OverallHealth:", o)
 	}
 
 	for i, tCase := range overallHealthTestCases {
-		h.SetHealth("major", tCase.in[0])
-		h.SetHealth("unspecified", tCase.in[1])
-		h.SetHealth("minor", tCase.in[2])
-		if o := h.OverallHealth(); o != tCase.out {
+		cs0.SetGroupHealth(tCase.in[0])
+		cs1.SetGroupHealth(tCase.in[1])
+		cs2.SetGroupHealth(tCase.in[2])
+		if o := c.OverallHealth(); o != tCase.out {
 			t.Fatalf("case #%d: unexpected OverallHealth: %v", i, o)
 		}
 	}
-
 }

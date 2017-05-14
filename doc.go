@@ -1,7 +1,8 @@
 /*
-Package healthz is a status reporter library for microservices. It provides
-a `Handler` which allows components in the app to store their status, and
-exposes these reports in multiple formats:
+Package healthz is a status reporter library for microservices. It models the
+system as a hierarchicy subcomponents, and calculate the overall health usng the
+overall health of the direct subcomponets of the root component. The handler
+exposes the health reports in multiple formats:
 
 	* HTML Report (`/`)
 	* JSON Report (`/json`)

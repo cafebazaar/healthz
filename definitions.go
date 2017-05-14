@@ -1,7 +1,5 @@
 package healthz
 
-import "net/http"
-
 // Severity specifies the seriousness of a component
 type Severity int8
 
@@ -53,26 +51,27 @@ func init() {
 	severityToTitle[Unspecified] = "Unspecified"
 }
 
-// Handler is a http handler which is notified about health level of the
-// different components in the system, and reports them through http
-type Handler interface {
+// ComponentGroup represents a component or a group of components. You can set
+// health level of the group by calling `SetGroupHealth`, OR, by creating
+// subcomponents. Note that you can't mix these two mechanism, it will cause
+// panic!
+type ComponentGroup interface {
+	// SetGroupHealth sets the health level of the specified component.
+	SetGroupHealth(health Health)
 
-	// ServeHTTP is implemented to return reports as expected
-	ServeHTTP(http.ResponseWriter, *http.Request)
+	// RegisterSubcomponent creates a subcomponent if it wasn't registered
+	// before, and sets the severity level of the subcomponent to the given
+	// value.
+	RegisterSubcomponent(name string, severity Severity) ComponentGroup
 
-	// RegisterComponent creates the component if it wasn't registered before,
-	// and sets the severity level of the component to the given value
-	RegisterComponent(name string, severity Severity)
-
-	// UnregisterComponent removes the component from the report, and the
+	// UnregisterSubcomponent removes the subcomponent from the group, and the
 	// calculation of the `OverallHealth`
-	UnregisterComponent(name string)
+	UnregisterSubcomponent(name string)
 
-	// SetHealth sets the health level of the specified component
-	SetHealth(component string, health Health)
-
-	// OverallHealth of a system is minimum value of these two:
-	//	* Minimum health level of all the components with severity=Major
+	// OverallHealth is the specified value set by `SetGroupHealth`, or if the
+	// this instance contains one or more subcomponents, it's the minimum value
+	// of these two:
+	//	* Minimum health level of all the subcomponents with severity=Major
 	//	* 1 + Minimum health level of all the components with severity=Unspecified
 	OverallHealth() Health
 }

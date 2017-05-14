@@ -4,6 +4,8 @@
 
 ![Screenshot of HTML Report - Healthz](https://github.com/cafebazaar/healthz/raw/master/demo/Healthz.png)
 
+## Features
+* Overall Health Calculation using Subcomponents' Severity and Health Level 
 * HTML Report
 * JSON Report
 * [Kubernetes Liveness and Readiness](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/)

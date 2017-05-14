@@ -12,14 +12,22 @@ const addr = "127.0.0.1:8090"
 func main() {
 	h := healthz.NewHandler("Demo (v1.0.0)", true)
 
-	h.RegisterComponent("component-major-redundant", healthz.Major)
-	h.SetHealth("component-major-redundant", healthz.Redundant)
-	h.RegisterComponent("component-major-warning", healthz.Major)
-	h.SetHealth("component-major-warning", healthz.Warning)
-	h.RegisterComponent("component-unspecified-warning", healthz.Unspecified)
-	h.SetHealth("component-unspecified-warning", healthz.Warning)
-	h.RegisterComponent("component-minor-error", healthz.Minor)
-	h.SetHealth("component-minor-error", healthz.Error)
+	componentMajorRedundant := h.RegisterSubcomponent("component-major-redundant", healthz.Major)
+	componentMajorRedundant.SetGroupHealth(healthz.Redundant)
+	componentMajorWarning := h.RegisterSubcomponent("component-major-warning", healthz.Major)
+	componentMajorWarning.SetGroupHealth(healthz.Warning)
+	componentUnspecifiedWarning := h.RegisterSubcomponent("component-unspecified-warning", healthz.Unspecified)
+	componentUnspecifiedWarning.SetGroupHealth(healthz.Warning)
+	componentMinorError := h.RegisterSubcomponent("component-minor-error", healthz.Minor)
+	componentMinorError.SetGroupHealth(healthz.Error)
+
+	componentComplex := h.RegisterSubcomponent("component-complex", healthz.Unspecified)
+	subcomponent1 := componentComplex.RegisterSubcomponent("subcomponent1", healthz.Major)
+	subcomponent1.SetGroupHealth(healthz.Redundant)
+	subcomponent2 := componentComplex.RegisterSubcomponent("subcomponent2", healthz.Unspecified)
+	subcomponent2.SetGroupHealth(healthz.Normal)
+	subcomponent3 := componentComplex.RegisterSubcomponent("subcomponent3", healthz.Minor)
+	subcomponent3.SetGroupHealth(healthz.Error)
 
 	healthzServer := &http.Server{
 		Addr:    addr,
