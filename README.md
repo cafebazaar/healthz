@@ -4,6 +4,9 @@
 
 ![Screenshot of HTML Report - Healthz](https://github.com/cafebazaar/healthz/raw/master/demo/Healthz.png)
 
+## Examples
+  * [healthz.NewHandler()](https://godoc.org/github.com/cafebazaar/healthz#example-NewHandler)
+
 ## Features
 * Overall Health Calculation using Subcomponents' Severity and Health Levels
 * HTML Report
