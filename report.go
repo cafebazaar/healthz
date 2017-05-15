@@ -63,7 +63,7 @@ func (h *Handler) report() *report {
 
 func (h *Handler) reportLiveness(w http.ResponseWriter, r *http.Request) {
 	overallHealth := h.OverallHealth()
-	if overallHealth >= Unknown {
+	if overallHealth > Error {
 		w.Write([]byte("OK"))
 	} else {
 		http.Error(w, healthToTitle[overallHealth], http.StatusServiceUnavailable)

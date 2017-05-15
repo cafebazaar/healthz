@@ -6,7 +6,7 @@ exposes the health reports in multiple formats:
 
 	* HTML Report (`/`)
 	* JSON Report (`/json`)
-	* Liveness (`/liveness`): HTTP 200 only if the overall health is >= `Unknown`
+	* Liveness (`/liveness`): HTTP 200 only if the overall health is > `Error`
 	* Readiness (`/readiness`): HTTP 200 only if the overall health is >= `Normal`
 
 Check the example, or run the demo:

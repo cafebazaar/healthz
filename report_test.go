@@ -15,7 +15,7 @@ var livenessAndReadinessReportsTestCases = []struct {
 	{in: Redundant, livenessOut: http.StatusOK, readinessOut: http.StatusOK},
 	{in: Normal, livenessOut: http.StatusOK, readinessOut: http.StatusOK},
 	{in: Unknown, livenessOut: http.StatusOK, readinessOut: http.StatusServiceUnavailable},
-	{in: Warning, livenessOut: http.StatusServiceUnavailable, readinessOut: http.StatusServiceUnavailable},
+	{in: Warning, livenessOut: http.StatusOK, readinessOut: http.StatusServiceUnavailable},
 	{in: Error, livenessOut: http.StatusServiceUnavailable, readinessOut: http.StatusServiceUnavailable},
 }
 
