@@ -67,25 +67,34 @@ func (c *componentGroup) OverallHealth() Health {
 	if len(c.Subcomponents) == 0 {
 		return Unknown
 	}
-	var res Health = 100
+	res := Redundant
+	var majorIsInGroup, unspecifiedIsInGroup bool
 	for _, c := range c.Subcomponents {
 		if c.Severity >= Major {
+			majorIsInGroup = true
 			componentHealth := c.OverallHealth()
 			if res > componentHealth {
 				res = componentHealth
 			}
 		}
 	}
-	if res == 100 {
-		res = Unknown
+	if !majorIsInGroup && res > Normal {
+		res = Normal
 	}
 	for _, c := range c.Subcomponents {
 		if c.Severity == Unspecified {
+			unspecifiedIsInGroup = true
 			componentHealth := c.OverallHealth()
-			if res > (componentHealth + 1) {
-				res = componentHealth + 1
+			if majorIsInGroup {
+				componentHealth++
+			}
+			if res > componentHealth {
+				res = componentHealth
 			}
 		}
+	}
+	if !majorIsInGroup && !unspecifiedIsInGroup {
+		res = Unknown
 	}
 	return res
 }
@@ -101,25 +110,38 @@ func (c *componentGroup) reportComponents() *reportComponents {
 		rc.OverallHealth = c.Health
 		return rc
 	}
+	// TODO: how can we refactor this algorithm which also appears in OverallHealth()?
+	rc.OverallHealth = Redundant
+	var majorIsInGroup, unspecifiedIsInGroup bool
 	for name, c := range c.Subcomponents {
 		subcomponentRC := c.reportComponents()
 		subcomponentRC.Name = name
 		rc.Subcomponents = append(rc.Subcomponents, subcomponentRC)
-	}
-	// TODO: how can we refactor this algorithm which also appears in OverallHealth()?
-	rc.OverallHealth = 100
-	for _, c := range rc.Subcomponents {
-		if c.Severity >= Major && rc.OverallHealth > c.OverallHealth {
-			rc.OverallHealth = c.OverallHealth
+		if c.Severity >= Major {
+			majorIsInGroup = true
+			if rc.OverallHealth > subcomponentRC.OverallHealth {
+				rc.OverallHealth = subcomponentRC.OverallHealth
+			}
+
 		}
 	}
-	if rc.OverallHealth == 100 {
+	if !majorIsInGroup && rc.OverallHealth > Normal {
+		rc.OverallHealth = Normal
+	}
+	for _, subcomponentRC := range rc.Subcomponents {
+		if subcomponentRC.Severity == Unspecified {
+			unspecifiedIsInGroup = true
+			componentHealth := subcomponentRC.OverallHealth
+			if majorIsInGroup {
+				componentHealth++
+			}
+			if rc.OverallHealth > componentHealth {
+				rc.OverallHealth = componentHealth
+			}
+		}
+	}
+	if !majorIsInGroup && !unspecifiedIsInGroup {
 		rc.OverallHealth = Unknown
-	}
-	for _, c := range rc.Subcomponents {
-		if c.Severity == Unspecified && rc.OverallHealth > (c.OverallHealth+1) {
-			rc.OverallHealth = c.OverallHealth + 1
-		}
 	}
 	sort.Sort(rc)
 	return rc

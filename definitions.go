@@ -73,5 +73,9 @@ type ComponentGroup interface {
 	// of these two:
 	//	* Minimum health level of all the subcomponents with severity=Major
 	//	* 1 + Minimum health level of all the components with severity=Unspecified
+	// If no Major or Unspecified component is registered, OverallHealth
+	// returns Unknown.
+	// Otherwise, if no Major component is registered, the result will be
+	// capped at Normal
 	OverallHealth() Health
 }

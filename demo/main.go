@@ -22,12 +22,20 @@ func main() {
 	componentMinorError.SetGroupHealth(healthz.Error)
 
 	componentComplex := h.RegisterSubcomponent("component-complex", healthz.Unspecified)
-	subcomponent1 := componentComplex.RegisterSubcomponent("subcomponent1", healthz.Major)
-	subcomponent1.SetGroupHealth(healthz.Redundant)
-	subcomponent2 := componentComplex.RegisterSubcomponent("subcomponent2", healthz.Unspecified)
-	subcomponent2.SetGroupHealth(healthz.Normal)
-	subcomponent3 := componentComplex.RegisterSubcomponent("subcomponent3", healthz.Minor)
-	subcomponent3.SetGroupHealth(healthz.Error)
+	subcomponent11 := componentComplex.RegisterSubcomponent("subcomponent11", healthz.Major)
+	subcomponent11.SetGroupHealth(healthz.Redundant)
+	subcomponent12 := componentComplex.RegisterSubcomponent("subcomponent12", healthz.Unspecified)
+	subcomponent12.SetGroupHealth(healthz.Normal)
+	subcomponent13 := componentComplex.RegisterSubcomponent("subcomponent13", healthz.Minor)
+	subcomponent13.SetGroupHealth(healthz.Error)
+
+	componentComplexNoMajor := h.RegisterSubcomponent("component-complex-no-major", healthz.Unspecified)
+	subcomponent21 := componentComplexNoMajor.RegisterSubcomponent("subcomponent21", healthz.Unspecified)
+	subcomponent21.SetGroupHealth(healthz.Redundant)
+
+	componentComplexNoMajorNoUnspecified := h.RegisterSubcomponent("component-complex-no-major-no-unspecified", healthz.Unspecified)
+	subcomponent31 := componentComplexNoMajorNoUnspecified.RegisterSubcomponent("subcomponent31", healthz.Minor)
+	subcomponent31.SetGroupHealth(healthz.Redundant)
 
 	healthzServer := &http.Server{
 		Addr:    addr,

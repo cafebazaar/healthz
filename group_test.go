@@ -50,6 +50,26 @@ var overallHealthTestCases = []struct {
 	out Health
 }{
 	{
+		in:  []hs{{Unknown, Unspecified}},
+		out: Unknown,
+	},
+	{
+		in:  []hs{{Normal, Unspecified}},
+		out: Normal,
+	},
+	{
+		in:  []hs{{Redundant, Unspecified}},
+		out: Normal,
+	},
+	{
+		in:  []hs{{Error, Minor}},
+		out: Unknown,
+	},
+	{
+		in:  []hs{{Redundant, Minor}},
+		out: Unknown,
+	},
+	{
 		in:  []hs{{Unknown, Major}, {Unknown, Unspecified}, {Unknown, Minor}},
 		out: Unknown,
 	},
@@ -80,14 +100,6 @@ var overallHealthTestCases = []struct {
 	{
 		in:  []hs{{Redundant, Major}, {Error, Unspecified}, {Redundant, Minor}},
 		out: Warning,
-	},
-	{
-		in:  []hs{{Unknown, Unspecified}},
-		out: Unknown,
-	},
-	{
-		in:  []hs{{Error, Minor}},
-		out: Unknown,
 	},
 }
 
