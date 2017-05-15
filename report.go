@@ -28,30 +28,24 @@ func init() {
 	}
 }
 
-type reportComponents struct {
-	Name          string
-	Severity      Severity
-	OverallHealth Health
-	Subcomponents []*reportComponents `json:",omitempty"`
-}
-type report struct {
-	ServiceSignature string
-	Uptime           time.Duration `json:",omitempty"`
-	Hostname         string        `json:",omitempty"`
-	Root             *reportComponents
-}
-
-func (rc *reportComponents) Len() int {
+func (rc *GroupReport) Len() int {
 	return len(rc.Subcomponents)
 }
-func (rc *reportComponents) Swap(i, j int) {
+func (rc *GroupReport) Swap(i, j int) {
 	rc.Subcomponents[i], rc.Subcomponents[j] = rc.Subcomponents[j], rc.Subcomponents[i]
 }
-func (rc *reportComponents) Less(i, j int) bool {
+func (rc *GroupReport) Less(i, j int) bool {
 	if rc.Subcomponents[i].OverallHealth == rc.Subcomponents[j].OverallHealth {
 		return rc.Subcomponents[i].Severity > rc.Subcomponents[j].Severity
 	}
 	return rc.Subcomponents[i].OverallHealth < rc.Subcomponents[j].OverallHealth
+}
+
+type report struct {
+	ServiceSignature string
+	Uptime           time.Duration `json:",omitempty"`
+	Hostname         string        `json:",omitempty"`
+	Root             *GroupReport
 }
 
 func (h *Handler) report() *report {
@@ -62,7 +56,7 @@ func (h *Handler) report() *report {
 		uptime := time.Since(h.startTime)
 		rpt.Uptime = uptime
 		rpt.Hostname = h.hostname
-		rpt.Root = h.rootComponent.reportComponents()
+		rpt.Root = h.GroupReport()
 	}
 	return rpt
 }

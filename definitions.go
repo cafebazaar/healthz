@@ -51,6 +51,14 @@ func init() {
 	severityToTitle[Unspecified] = "Unspecified"
 }
 
+// GroupReport is a copied status of a group and its subcomponents
+type GroupReport struct {
+	Name          string
+	Severity      Severity
+	OverallHealth Health
+	Subcomponents []*GroupReport `json:",omitempty"`
+}
+
 // ComponentGroup represents a component or a group of components. You can set
 // health level of the group by calling `SetGroupHealth`, OR, by creating
 // subcomponents. Note that you can't mix these two mechanism, it will cause
@@ -78,4 +86,8 @@ type ComponentGroup interface {
 	// Otherwise, if no Major component is registered, the result will be
 	// capped at Normal
 	OverallHealth() Health
+
+	// GroupReport copies the current status of the group and its subcomponents,
+	// and returns the copied object
+	GroupReport() *GroupReport
 }

@@ -99,12 +99,12 @@ func (c *componentGroup) OverallHealth() Health {
 	return res
 }
 
-func (c *componentGroup) reportComponents() *reportComponents {
+func (c *componentGroup) GroupReport() *GroupReport {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
-	rc := &reportComponents{
+	rc := &GroupReport{
 		Severity:      c.Severity,
-		Subcomponents: make([]*reportComponents, 0, len(c.Subcomponents)),
+		Subcomponents: make([]*GroupReport, 0, len(c.Subcomponents)),
 	}
 	if c.state == componentStateStandalone || len(c.Subcomponents) == 0 {
 		rc.OverallHealth = c.Health
@@ -114,7 +114,7 @@ func (c *componentGroup) reportComponents() *reportComponents {
 	rc.OverallHealth = Redundant
 	var majorIsInGroup, unspecifiedIsInGroup bool
 	for name, c := range c.Subcomponents {
-		subcomponentRC := c.reportComponents()
+		subcomponentRC := c.GroupReport()
 		subcomponentRC.Name = name
 		rc.Subcomponents = append(rc.Subcomponents, subcomponentRC)
 		if c.Severity >= Major {

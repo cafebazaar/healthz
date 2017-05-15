@@ -48,6 +48,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mux.ServeHTTP(w, r)
 }
 
+// GroupReport copies the current status of the root and its subcomponents,
+// and returns the copied object
+func (h *Handler) GroupReport() *GroupReport {
+	return h.rootComponent.GroupReport()
+}
+
 // NewHandler creates a Handler and returns it. if details is true, these
 // values are also included in the applicable reports:
 //
