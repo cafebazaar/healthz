@@ -85,7 +85,7 @@ func (c *componentGroup) OverallHealth() Health {
 		if c.Severity == Unspecified {
 			unspecifiedIsInGroup = true
 			componentHealth := c.OverallHealth()
-			if majorIsInGroup {
+			if majorIsInGroup || componentHealth < Normal {
 				componentHealth++
 			}
 			if res > componentHealth {
@@ -132,7 +132,7 @@ func (c *componentGroup) GroupReport() *GroupReport {
 		if subcomponentRC.Severity == Unspecified {
 			unspecifiedIsInGroup = true
 			componentHealth := subcomponentRC.OverallHealth
-			if majorIsInGroup {
+			if majorIsInGroup || componentHealth < Normal {
 				componentHealth++
 			}
 			if rc.OverallHealth > componentHealth {

@@ -49,9 +49,18 @@ var overallHealthTestCases = []struct {
 	in  []hs
 	out Health
 }{
+	// Capping
+	{
+		in:  []hs{{Error, Unspecified}},
+		out: Warning,
+	},
+	{
+		in:  []hs{{Warning, Unspecified}},
+		out: Unknown,
+	},
 	{
 		in:  []hs{{Unknown, Unspecified}},
-		out: Unknown,
+		out: Normal,
 	},
 	{
 		in:  []hs{{Normal, Unspecified}},
@@ -69,6 +78,8 @@ var overallHealthTestCases = []struct {
 		in:  []hs{{Redundant, Minor}},
 		out: Unknown,
 	},
+
+	// Mixed
 	{
 		in:  []hs{{Unknown, Major}, {Unknown, Unspecified}, {Unknown, Minor}},
 		out: Unknown,
