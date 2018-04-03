@@ -42,21 +42,26 @@ func (rc *GroupReport) Less(i, j int) bool {
 }
 
 type report struct {
-	ServiceSignature string
-	Uptime           time.Duration `json:",omitempty"`
-	Hostname         string        `json:",omitempty"`
-	Root             *GroupReport
+	ServiceSignature  string
+	OverallHealth     string
+	OverallHealthCode Health
+	Uptime            time.Duration `json:",omitempty"`
+	Hostname          string        `json:",omitempty"`
+	Root              *GroupReport  `json:",omitempty"`
 }
 
 func (h *Handler) report() *report {
+	root := h.GroupReport()
 	rpt := &report{
-		ServiceSignature: h.serviceSignature,
+		ServiceSignature:  h.serviceSignature,
+		OverallHealth:     healthToTitle[root.OverallHealth],
+		OverallHealthCode: root.OverallHealth,
 	}
 	if h.details {
 		uptime := time.Since(h.startTime)
 		rpt.Uptime = uptime
 		rpt.Hostname = h.hostname
-		rpt.Root = h.GroupReport()
+		rpt.Root = root
 	}
 	return rpt
 }
@@ -82,16 +87,16 @@ func (h *Handler) reportReadiness(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) reportJSON(w http.ResponseWriter, r *http.Request) {
 	rpt := h.report()
 	jData, _ := json.Marshal(rpt)
-	w.Header().Set("Overall-Health", healthToTitle[rpt.Root.OverallHealth])
-	w.Header().Set("Overall-Health-Code", fmt.Sprintf("%d", rpt.Root.OverallHealth))
+	w.Header().Set("Overall-Health", rpt.OverallHealth)
+	w.Header().Set("Overall-Health-Code", fmt.Sprintf("%d", rpt.OverallHealthCode))
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jData)
 }
 
 func (h *Handler) reportHTML(w http.ResponseWriter, r *http.Request) {
 	rpt := h.report()
-	w.Header().Set("Overall-Health", healthToTitle[rpt.Root.OverallHealth])
-	w.Header().Set("Overall-Health-Code", fmt.Sprintf("%d", rpt.Root.OverallHealth))
+	w.Header().Set("Overall-Health", rpt.OverallHealth)
+	w.Header().Set("Overall-Health-Code", fmt.Sprintf("%d", rpt.OverallHealthCode))
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	err := htmlTemplate.Execute(w, rpt)
 	if err != nil {
